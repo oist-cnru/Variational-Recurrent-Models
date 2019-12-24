@@ -37,3 +37,5 @@ The program will run and save the results as .mat files at './data/' when finish
 - Walker2dV
 - Sequential
 
+## Cognitive Neurorobotics Research Unit, Okinawa Institute of Science and Technology Graduate University
+https://groups.oist.jp/cnru
