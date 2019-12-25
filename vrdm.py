@@ -181,33 +181,18 @@ class VRM(nn.Module):
             self.d2h = nn.ModuleDict()
             for l in range(self.n_levels):
                 self.z2h.append(nn.Linear(self.z_layers[l], self.d_layers[l]))
-                self.d2h = nn.ModuleDict()
-                for l in range(self.n_levels):
-                    m = nn.Linear(d_layers[l], d_layers[l], bias=True)  # link from current level
-                    self.d2h["{}to{}".format(l, l)] = m
-                    if l > 0:  # not lowest level, link from one level lower
-                        m = nn.Linear(d_layers[l - 1], d_layers[l], bias=True)
-                        self.d2h["{}to{}".format(l - 1, l)] = m
-                    if l < self.n_levels - 1:  # not highest level, link from one level lower
-                        m = nn.Linear(d_layers[l + 1], d_layers[l], bias=True)
-                        self.d2h["{}to{}".format(l + 1, l)] = m
+
+                m = nn.Linear(d_layers[l], d_layers[l], bias=True)  # link from current level
+                self.d2h["{}to{}".format(l, l)] = m
+                if l > 0:  # not lowest level, link from one level lower
+                    m = nn.Linear(d_layers[l - 1], d_layers[l], bias=True)
+                    self.d2h["{}to{}".format(l - 1, l)] = m
+                if l < self.n_levels - 1:  # not highest level, link from one level lower
+                    m = nn.Linear(d_layers[l + 1], d_layers[l], bias=True)
+                    self.d2h["{}to{}".format(l + 1, l)] = m
 
         elif self.rnn_type == 'mtgru':
-            self.rnn_levels = nn.ModuleList()
-            for l in range(self.n_levels):
-                if l == 0:  # lowest level
-                    if self.n_levels == 1:
-                        rnn_input_size = self.x_phi_layers[-1] + self.z_layers[l]
-                    else:
-                        rnn_input_size = self.x_phi_layers[-1] + self.d_layers[l + 1] + self.z_layers[l]
-
-                elif l == self.n_levels - 1:  # not highest level, link from one level lower
-                    rnn_input_size = self.d_layers[l - 1] + self.z_layers[l]
-
-                else:
-                    rnn_input_size = self.d_layers[l - 1] + self.d_layers[l + 1] + self.z_layers[l]
-
-                self.rnn_levels.append(nn.GRUCell(rnn_input_size, self.d_layers[l]))
+            raise NotImplementedError
 
         elif self.rnn_type == 'mtlstm':
             self.rnn_levels = nn.ModuleList()
@@ -309,9 +294,7 @@ class VRM(nn.Module):
                 else:
                     rnn_input = torch.cat((prev_d_levels[l - 1], prev_d_levels[l + 1]), dim=-1)
 
-                last = torch.cat((rnn_input,
-                                  new_z_levels[l]),
-                                 dim=-1)
+                last = torch.cat((rnn_input, new_z_levels[l]), dim=-1)
 
                 new_d, new_h = self.rnn_levels[l](last, (prev_d_levels[l], prev_h_levels[l]))
 
